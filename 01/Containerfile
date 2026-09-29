@@ -1,0 +1,29 @@
+# Multi-stage build: no host JDK, Node, npm or pre-built application required.
+FROM docker.io/library/node:24-bookworm-slim AS frontend
+WORKDIR /workspace/frontend
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
+COPY frontend/ ./
+RUN npm run build
+
+FROM registry.access.redhat.com/ubi9/openjdk-25:1.24 AS backend
+USER 0
+RUN mkdir -p /workspace && chown 185:0 /workspace
+USER 185
+WORKDIR /workspace
+COPY --chown=185:0 gradlew build.gradle settings.gradle gradle.properties ./
+COPY --chown=185:0 gradle/ ./gradle/
+COPY --chown=185:0 src/ ./src/
+COPY --chown=185:0 containers/ ./containers/
+COPY --from=frontend --chown=185:0 /workspace/frontend/dist/ ./src/main/resources/META-INF/resources/
+RUN chmod +x gradlew && ./gradlew --no-daemon test quarkusBuild \
+    && javac -d /workspace/health containers/Healthcheck.java
+
+FROM registry.access.redhat.com/ubi9/openjdk-25-runtime:1.24
+WORKDIR /deployments
+COPY --from=backend --chown=185:0 /workspace/build/quarkus-app/ /deployments/
+COPY --from=backend --chown=185:0 /workspace/health/ /deployments/health/
+ENV QUARKUS_HTTP_HOST=0.0.0.0
+EXPOSE 8080
+USER 185
+ENTRYPOINT ["java", "-jar", "/deployments/quarkus-run.jar"]

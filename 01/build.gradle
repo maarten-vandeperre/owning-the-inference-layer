@@ -1,0 +1,17 @@
+plugins {
+    id 'java'
+    id 'io.quarkus' version '3.33.3.3'
+}
+repositories { mavenCentral() }
+dependencies {
+    implementation enforcedPlatform('io.quarkus.platform:quarkus-bom:3.33.3.3')
+    implementation 'io.quarkus:quarkus-rest-jackson'
+    implementation 'io.quarkus:quarkus-smallrye-health'
+    testImplementation 'io.quarkus:quarkus-junit5'
+    testImplementation 'io.rest-assured:rest-assured'
+}
+java { toolchain { languageVersion = JavaLanguageVersion.of(25) } }
+test {
+    useJUnitPlatform()
+    systemProperty 'java.util.logging.manager', 'org.jboss.logmanager.LogManager'
+}

@@ -1,0 +1,25 @@
+name: devoxx-coffee-01
+services:
+  coffee:
+    build:
+      context: .
+      dockerfile: Containerfile
+    image: localhost/devoxx-coffee:01
+    env_file:
+      - .env
+    environment:
+      QUARKUS_HTTP_HOST: 0.0.0.0
+      QUARKUS_HTTP_PORT: "8080"
+    ports:
+      - "127.0.0.1:${APP_PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD", "java", "-cp", "/deployments/health", "Healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    restart: unless-stopped
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true

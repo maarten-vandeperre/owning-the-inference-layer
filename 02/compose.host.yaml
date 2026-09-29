@@ -1,0 +1,26 @@
+# Native Linux loopback-only model service alternative.
+name: devoxx-coffee-02-host
+services:
+  coffee:
+    build:
+      context: .
+      dockerfile: Containerfile
+    image: localhost/devoxx-coffee:02
+    env_file:
+      - .env
+    environment:
+      QUARKUS_HTTP_HOST: 127.0.0.1
+      QUARKUS_HTTP_PORT: "8080"
+      AI_CHAT_URL: "${AI_HOST_CHAT_URL:-http://127.0.0.1:8081/v1/chat/completions}"
+    network_mode: host
+    healthcheck:
+      test: ["CMD", "java", "-cp", "/deployments/health", "Healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    restart: unless-stopped
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true

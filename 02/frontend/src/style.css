@@ -1,0 +1,11 @@
+@import "tailwindcss";
+@theme { --font-sans: "Calibri", "Carlito", system-ui, sans-serif; }
+:root {font-family: var(--font-sans); color:#2e2019; background:#f7f1ea; font-synthesis:none;}
+h1,h2,h3 {font-family:"Cambria","Caladea",Georgia,serif; font-weight:700;}
+button,a { -webkit-tap-highlight-color:transparent; }
+a {color:inherit;text-decoration:none;}
+button {cursor:pointer;} button:disabled {opacity:.55;cursor:wait;}
+.primary {border:0;border-radius:12px;background:#6f4518;color:white;padding:15px 23px;font-weight:700;transition:background .15s;}
+.primary:hover {background:#4d2f10;}.primary:focus-visible,.sample:focus-visible{outline:3px solid #b4762a;outline-offset:3px;}
+.sample {border:1px solid #ddcdbb;border-radius:20px;padding:6px 10px;background:transparent;font-size:12px;}
+.cup {display:grid;place-items:center;background:#efe4d6;border-radius:50%;width:45px;height:45px;}

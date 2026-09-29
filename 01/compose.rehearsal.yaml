@@ -1,0 +1,27 @@
+# Use together with compose.yaml. Fixed fixtures, NOT real inference.
+services:
+  coffee:
+    environment:
+      AI_PROVIDER: "Rehearsal mock (no model)"
+      AI_CHAT_URL: http://mock-model:8099/v1/chat/completions
+      AI_MODEL: rehearsal-fixtures
+      AI_API_KEY: rehearsal-only
+      AI_JSON_MODE: "false"
+      AI_HTTP_ALLOWED_HOSTS: mock-model
+    depends_on:
+      mock-model:
+        condition: service_healthy
+  mock-model:
+    image: docker.io/library/python:3.13-alpine
+    command: ["python", "/mock/model.py", "--host", "0.0.0.0"]
+    volumes:
+      - ./rehearsal/mock_model.py:/mock/model.py:ro,Z
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8099/health', timeout=2)"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
