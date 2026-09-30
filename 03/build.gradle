@@ -7,6 +7,7 @@ dependencies {
     implementation enforcedPlatform('io.quarkus.platform:quarkus-bom:3.33.3.3')
     implementation 'io.quarkus:quarkus-rest-jackson'
     implementation 'io.quarkus:quarkus-smallrye-health'
+    implementation "io.quarkiverse.langchain4j:quarkus-langchain4j-openai:${quarkusLangchain4jVersion}"
     testImplementation 'io.quarkus:quarkus-junit5'
     testImplementation 'io.rest-assured:rest-assured'
 }
