@@ -1,0 +1,12 @@
+# PoC PostgreSQL (14+ required) for MaaS API key storage.
+# For production, use a managed PostgreSQL, drop this layer and run
+# ./deploy.sh ... --postgres-url 'postgresql://user:pass@host:5432/db?sslmode=require'
+# The "postgres-creds" Secret is created by deploy.sh and never stored in git.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: maas-db
+commonAnnotations:
+  argocd.argoproj.io/sync-wave: "-5"
+resources:
+  - namespace.yaml
+  - postgres.yaml

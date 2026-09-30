@@ -1,0 +1,25 @@
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: MaaSSubscription
+metadata:
+  name: small-models-free
+  namespace: models-as-a-service
+  annotations:
+    openshift.io/display-name: "Small models: Free"
+    openshift.io/description: "5k tokens/min per model for every authenticated user"
+spec:
+  owner:
+    groups:
+      - name: system:authenticated
+    users: []
+  modelRefs:
+    - name: gemma-3-270m-it
+      namespace: maas-models
+      tokenRateLimits:
+        - limit: 5000
+          window: 1m
+    - name: qwen3-0-6b
+      namespace: maas-models
+      tokenRateLimits:
+        - limit: 5000
+          window: 1m
+  priority: 10

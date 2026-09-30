@@ -1,0 +1,120 @@
+# Argo CD Applications for MaaS with Gemma 3 270M + Qwen3 0.6B.
+# Placeholders (__REPO_URL__, __REVISION__, __RHOAI_VERSION__, __ACCELERATOR__) are filled
+# in by "./deploy.sh argocd". To use it by hand: replace them and "oc apply -f" this file.
+#
+# The apps converge on their own through retries: resources whose CRDs only appear later
+# (MaaS CRDs show up after the DSC patch) are skipped in dry-run and retried.
+# The sync-wave annotations only take effect if you wrap these in an app-of-apps.
+# The resources finalizer makes "oc delete application" cascade; shared or operator owned
+# objects carry Delete=false and are left alone.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: maas-platform
+  namespace: openshift-gitops
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  source:
+    repoURL: __REPO_URL__
+    targetRevision: __REVISION__
+    path: __REPO_PATH__platform/overlays/rhoai-__RHOAI_VERSION__
+  destination:
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - SkipDryRunOnMissingResource=true
+      - RespectIgnoreDifferences=true
+    retry:
+      limit: 20
+      backoff:
+        duration: 30s
+        factor: 2
+        maxDuration: 5m
+  ignoreDifferences:
+    # The RHOAI operator may rewrite dashboard flags; never fight it on unrelated fields
+    - group: opendatahub.io
+      kind: OdhDashboardConfig
+      jqPathExpressions:
+        - .spec.dashboardConfig | del(.modelAsService, .genAiStudio, .maasAuthPolicies, .vLLMDeploymentOnMaaS)
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: maas-models
+  namespace: openshift-gitops
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  project: default
+  source:
+    repoURL: __REPO_URL__
+    targetRevision: __REVISION__
+    path: __REPO_PATH__models/overlays/__ACCELERATOR__
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: maas-models
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - SkipDryRunOnMissingResource=true
+      - RespectIgnoreDifferences=true
+    retry:
+      limit: 20
+      backoff:
+        duration: 30s
+        factor: 2
+        maxDuration: 5m
+  ignoreDifferences:
+    # OpenShift adds image pull secrets to every ServiceAccount
+    - kind: ServiceAccount
+      jqPathExpressions:
+        - .imagePullSecrets
+        - .secrets[] | select(.name | test("dockercfg"))
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: maas-governance
+  namespace: openshift-gitops
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  project: default
+  source:
+    repoURL: __REPO_URL__
+    targetRevision: __REVISION__
+    path: __REPO_PATH__governance
+  destination:
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - SkipDryRunOnMissingResource=true
+      - RespectIgnoreDifferences=true
+    retry:
+      limit: 20
+      backoff:
+        duration: 30s
+        factor: 2
+        maxDuration: 5m
+  ignoreDifferences:
+    # Group membership is managed by humans (oc adm groups add-users), not by git
+    - group: user.openshift.io
+      kind: Group
+      jsonPointers:
+        - /users

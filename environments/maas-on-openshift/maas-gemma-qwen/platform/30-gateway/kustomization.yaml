@@ -1,0 +1,47 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - gatewayclass.yaml
+  - gateway-options.yaml
+  - gateway.yaml
+  - route.yaml
+
+# Cluster specific values live in cluster-params.env (written by ./deploy.sh configure)
+# and are injected with replacements. The generated ConfigMap is marked local-config,
+# so it is used during the build only and never applied to the cluster.
+configMapGenerator:
+  - name: maas-cluster-params
+    envs:
+      - cluster-params.env
+    options:
+      disableNameSuffixHash: true
+      annotations:
+        config.kubernetes.io/local-config: "true"
+
+replacements:
+  - source:
+      kind: ConfigMap
+      name: maas-cluster-params
+      fieldPath: data.MAAS_HOSTNAME
+    targets:
+      - select:
+          kind: Gateway
+          name: maas-default-gateway
+        fieldPaths:
+          - spec.listeners.[name=http].hostname
+          - spec.listeners.[name=https].hostname
+      - select:
+          kind: Route
+          name: maas-default-gateway-https
+        fieldPaths:
+          - spec.host
+  - source:
+      kind: ConfigMap
+      name: maas-cluster-params
+      fieldPath: data.TLS_SECRET_NAME
+    targets:
+      - select:
+          kind: Gateway
+          name: maas-default-gateway
+        fieldPaths:
+          - spec.listeners.[name=https].tls.certificateRefs.0.name

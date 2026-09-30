@@ -1,0 +1,7 @@
+# Both models on vLLM CPU (default, no GPU needed)
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base
+  - ../../gemma-3-270m-it
+  - ../../qwen3-0-6b

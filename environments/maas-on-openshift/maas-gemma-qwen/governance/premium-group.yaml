@@ -1,0 +1,7 @@
+# Add users with: oc adm groups add-users maas-premium-users <user>
+# (Argo CD is configured to ignore the users list, so manual additions stick.)
+apiVersion: user.openshift.io/v1
+kind: Group
+metadata:
+  name: maas-premium-users
+users: []

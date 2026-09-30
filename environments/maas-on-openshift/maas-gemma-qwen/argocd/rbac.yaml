@@ -1,0 +1,15 @@
+# The default OpenShift GitOps instance cannot manage DataScienceCluster, Gateway API,
+# Kuadrant or MaaS resources out of the box. This grants its application controller
+# cluster-admin. Scope it down (dedicated ClusterRole) for production clusters.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: openshift-gitops-maas-cluster-admin
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: openshift-gitops-argocd-application-controller
+    namespace: openshift-gitops

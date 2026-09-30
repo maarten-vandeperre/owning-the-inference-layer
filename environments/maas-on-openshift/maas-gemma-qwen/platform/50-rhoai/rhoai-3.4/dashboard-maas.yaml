@@ -1,0 +1,11 @@
+apiVersion: opendatahub.io/v1alpha
+kind: OdhDashboardConfig
+metadata:
+  name: odh-dashboard-config
+  namespace: redhat-ods-applications
+spec:
+  dashboardConfig:
+    modelAsService: true          # MaaS pages in the dashboard
+    maasAuthPolicies: true        # MaaS admin pages (auth policies)
+    vLLMDeploymentOnMaaS: true    # vLLM runtime on MaaS (Tech Preview in 3.4)
+    genAiStudio: true             # user facing AI asset endpoints / API keys

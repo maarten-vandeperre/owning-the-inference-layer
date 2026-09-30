@@ -1,0 +1,8 @@
+# Optional: operators MaaS depends on (besides the RHOAI operator itself).
+# Apply only if they are not installed yet: ./deploy.sh oc --with-operators
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - connectivity-link.yaml
+  - leader-worker-set.yaml
+  - cert-manager.yaml

@@ -1,0 +1,12 @@
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: MaaSModelRef
+metadata:
+  name: gemma-3-270m-it
+  annotations:
+    openshift.io/display-name: "google/gemma-3-270m-it"
+    openshift.io/description: "Gemma 3 270M instruct served by vLLM"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  modelRef:
+    kind: LLMInferenceService
+    name: gemma-3-270m-it

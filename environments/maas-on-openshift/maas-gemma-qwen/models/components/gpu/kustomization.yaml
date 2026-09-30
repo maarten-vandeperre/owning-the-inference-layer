@@ -1,0 +1,45 @@
+# Switches every LLMInferenceService from vLLM CPU to vLLM CUDA on one NVIDIA GPU.
+# Needs Ampere or newer (A10G, L4, L40S, A100, H100) for bf16.
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+patches:
+  - target:
+      group: serving.kserve.io
+      kind: LLMInferenceService
+    patch: |-
+      - op: replace
+        path: /spec/template/containers/0/image
+        value: registry.redhat.io/rhaii/vllm-cuda-rhel9@sha256:5800e12b2a465f15961fcf34b645d79ed4f91ec9161eab22b1205d12682183c8
+      - op: add
+        path: /spec/template/containers/0/args/-
+        # tiny models: do not grab 90% of the GPU memory for the KV cache
+        value: --gpu-memory-utilization=0.5
+      - op: replace
+        path: /spec/template/containers/0/resources
+        value:
+          requests:
+            cpu: "2"
+            memory: 8Gi
+            nvidia.com/gpu: "1"
+          limits:
+            cpu: "4"
+            memory: 16Gi
+            nvidia.com/gpu: "1"
+      - op: add
+        path: /spec/template/tolerations
+        value:
+          - key: nvidia.com/gpu
+            operator: Exists
+            effect: NoSchedule
+      - op: add
+        path: /spec/template/containers/0/volumeMounts
+        value:
+          - name: shm
+            mountPath: /dev/shm
+      - op: add
+        path: /spec/template/volumes
+        value:
+          - name: shm
+            emptyDir:
+              medium: Memory
+              sizeLimit: 2Gi

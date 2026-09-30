@@ -1,0 +1,66 @@
+# Qwen3-0.6B: smallest model of the Qwen3 family (~0.6B params, Apache-2.0, not gated)
+# Default: vLLM CPU (Red Hat AI Inference Server). GPU variant: models/overlays/gpu
+apiVersion: serving.kserve.io/v1alpha1
+kind: LLMInferenceService
+metadata:
+  name: qwen3-0-6b
+  annotations:
+    openshift.io/display-name: "Qwen/Qwen3-0.6B"
+    opendatahub.io/model-type: generative
+    security.opendatahub.io/enable-auth: "true"
+  labels:
+    opendatahub.io/dashboard: "true"
+    opendatahub.io/genai-asset: "true"
+spec:
+  model:
+    name: qwen3-0-6b
+    uri: hf://Qwen/Qwen3-0.6B
+  replicas: 1
+  router:
+    route: {}
+    gateway:
+      refs:
+        - name: maas-default-gateway
+          namespace: openshift-ingress
+  template:
+    containers:
+      - name: main
+        image: registry.redhat.io/rhaiis/vllm-cpu-rhel9@sha256:f05e773647dddd37ec6c2215cb14bec87e4ab5a7d37f2e110d16cd92355427d3
+        command: ["python", "-m", "vllm.entrypoints.openai.api_server"]
+        args:
+          - "--served-model-name={{.Name}}"
+          - --model=/mnt/models
+          - --max-model-len=4096
+          - --enable-ssl-refresh
+          - --ssl-certfile=/var/run/kserve/tls/tls.crt
+          - --ssl-keyfile=/var/run/kserve/tls/tls.key
+          # usage stats in streaming responses, needed for MaaS token accounting
+          - --enable-force-include-usage
+        env:
+          - name: HF_HOME
+            value: /tmp/hf_home
+          - name: VLLM_CPU_KVCACHE_SPACE   # GiB of RAM for the KV cache (CPU only)
+            value: "4"
+        ports:
+          - containerPort: 8000
+            name: http
+            protocol: TCP
+        livenessProbe:
+          httpGet: {path: /health, port: 8000, scheme: HTTPS}
+          initialDelaySeconds: 300
+          periodSeconds: 30
+          timeoutSeconds: 30
+          failureThreshold: 5
+        readinessProbe:
+          httpGet: {path: /health, port: 8000, scheme: HTTPS}
+          initialDelaySeconds: 120
+          periodSeconds: 15
+          timeoutSeconds: 15
+          failureThreshold: 40
+        resources:
+          requests:
+            cpu: "4"
+            memory: 12Gi
+          limits:
+            cpu: "8"
+            memory: 16Gi

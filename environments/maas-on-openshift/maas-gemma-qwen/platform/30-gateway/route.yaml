@@ -1,0 +1,19 @@
+# maas.<apps-domain> -> OpenShift router -> (TLS passthrough) -> MaaS gateway
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: maas-default-gateway-https
+  namespace: openshift-ingress
+  annotations:
+    argocd.argoproj.io/sync-wave: "-6"
+spec:
+  host: REPLACED-BY-KUSTOMIZE
+  port:
+    targetPort: https
+  tls:
+    termination: passthrough
+    insecureEdgeTerminationPolicy: Redirect
+  to:
+    kind: Service
+    name: maas-default-gateway-openshift-default
+    weight: 100

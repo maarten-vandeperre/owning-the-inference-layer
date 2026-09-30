@@ -1,0 +1,26 @@
+# Optional: only when Connectivity Link / LWS / cert-manager operators are not installed yet.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: maas-operators
+  namespace: openshift-gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: default
+  source:
+    repoURL: __REPO_URL__
+    targetRevision: __REVISION__
+    path: __REPO_PATH__operators
+  destination:
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+    retry:
+      limit: 10
+      backoff:
+        duration: 30s
+        factor: 2
+        maxDuration: 5m

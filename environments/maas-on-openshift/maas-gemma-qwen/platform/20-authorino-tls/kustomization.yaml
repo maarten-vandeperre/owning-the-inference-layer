@@ -1,0 +1,10 @@
+# Objects shared with the Kuadrant/Authorino operators, applied with server-side apply.
+# Argo CD never prunes or deletes them.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+commonAnnotations:
+  argocd.argoproj.io/sync-wave: "-8"
+  argocd.argoproj.io/sync-options: ServerSideApply=true,Prune=false,Delete=false
+resources:
+  - authorino-service-cert.yaml
+  - authorino-tls.yaml

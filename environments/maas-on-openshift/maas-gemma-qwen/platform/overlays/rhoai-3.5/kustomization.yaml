@@ -1,0 +1,10 @@
+# Full MaaS platform for RHOAI 3.5 (used by the Argo CD "maas-platform" Application).
+# deploy.sh (oc mode) applies the same layers one by one with readiness waits in between.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../10-kuadrant
+  - ../../20-authorino-tls
+  - ../../30-gateway
+  - ../../40-postgres
+  - ../../50-rhoai/rhoai-3.5

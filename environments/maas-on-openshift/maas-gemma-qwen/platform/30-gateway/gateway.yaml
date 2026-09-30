@@ -1,0 +1,50 @@
+# The MaaS gateway. Name and namespace are fixed by OpenShift AI.
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: maas-default-gateway
+  namespace: openshift-ingress
+  annotations:
+    argocd.argoproj.io/sync-wave: "-6"
+    # Stop the ODH model controller from overriding MaaS managed auth policies
+    opendatahub.io/managed: "false"
+    # Lets the MaaS controller wire Envoy to Authorino over TLS
+    security.opendatahub.io/authorino-tls-bootstrap: "true"
+    # Expose the gateway as ClusterIP and publish it through the passthrough Route
+    # in route.yaml. Works on every platform without a LoadBalancer or DNS changes.
+    # Remove this annotation (and route.yaml) if you prefer a cloud LoadBalancer.
+    networking.istio.io/service-type: ClusterIP
+spec:
+  gatewayClassName: openshift-default
+  infrastructure:
+    parametersRef:
+      group: ""
+      kind: ConfigMap
+      name: maas-gateway-options
+  listeners:
+    - name: http
+      hostname: REPLACED-BY-KUSTOMIZE
+      port: 80
+      protocol: HTTP
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              maas.opendatahub.io/gateway-access: "true"
+    - name: https
+      hostname: REPLACED-BY-KUSTOMIZE
+      port: 443
+      protocol: HTTPS
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              maas.opendatahub.io/gateway-access: "true"
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - group: ""
+            kind: Secret
+            name: REPLACED-BY-KUSTOMIZE

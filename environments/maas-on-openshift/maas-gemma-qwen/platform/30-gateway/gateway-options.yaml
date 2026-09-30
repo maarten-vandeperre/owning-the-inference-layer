@@ -1,0 +1,23 @@
+# Gateway infrastructure tuning: the Kuadrant Wasm plugins push the Envoy pod
+# past the default 1Gi memory limit, so raise it.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: maas-gateway-options
+  namespace: openshift-ingress
+  annotations:
+    argocd.argoproj.io/sync-wave: "-7"
+data:
+  deployment: |
+    spec:
+      template:
+        spec:
+          containers:
+          - name: istio-proxy
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                cpu: "2"
+                memory: 2Gi

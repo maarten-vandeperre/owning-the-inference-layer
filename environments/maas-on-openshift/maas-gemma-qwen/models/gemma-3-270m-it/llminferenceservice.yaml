@@ -1,0 +1,67 @@
+# Gemma 3 270M instruct: smallest Gemma model (~270M params).
+# GATED on Hugging Face: accept the Gemma license with the account behind HF_TOKEN.
+# Default: vLLM CPU (Red Hat AI Inference Server). GPU variant: models/overlays/gpu
+apiVersion: serving.kserve.io/v1alpha1
+kind: LLMInferenceService
+metadata:
+  name: gemma-3-270m-it
+  annotations:
+    openshift.io/display-name: "google/gemma-3-270m-it"
+    opendatahub.io/model-type: generative
+    security.opendatahub.io/enable-auth: "true"
+  labels:
+    opendatahub.io/dashboard: "true"
+    opendatahub.io/genai-asset: "true"
+spec:
+  model:
+    name: gemma-3-270m-it
+    uri: hf://google/gemma-3-270m-it
+  replicas: 1
+  router:
+    route: {}
+    gateway:
+      refs:
+        - name: maas-default-gateway
+          namespace: openshift-ingress
+  template:
+    serviceAccountName: hf-model-puller   # carries the HF token for the gated download
+    containers:
+      - name: main
+        image: registry.redhat.io/rhaiis/vllm-cpu-rhel9@sha256:f05e773647dddd37ec6c2215cb14bec87e4ab5a7d37f2e110d16cd92355427d3
+        command: ["python", "-m", "vllm.entrypoints.openai.api_server"]
+        args:
+          - "--served-model-name={{.Name}}"
+          - --model=/mnt/models
+          - --max-model-len=4096
+          - --enable-ssl-refresh
+          - --ssl-certfile=/var/run/kserve/tls/tls.crt
+          - --ssl-keyfile=/var/run/kserve/tls/tls.key
+          - --enable-force-include-usage
+        env:
+          - name: HF_HOME
+            value: /tmp/hf_home
+          - name: VLLM_CPU_KVCACHE_SPACE
+            value: "2"
+        ports:
+          - containerPort: 8000
+            name: http
+            protocol: TCP
+        livenessProbe:
+          httpGet: {path: /health, port: 8000, scheme: HTTPS}
+          initialDelaySeconds: 300
+          periodSeconds: 30
+          timeoutSeconds: 30
+          failureThreshold: 5
+        readinessProbe:
+          httpGet: {path: /health, port: 8000, scheme: HTTPS}
+          initialDelaySeconds: 120
+          periodSeconds: 15
+          timeoutSeconds: 15
+          failureThreshold: 40
+        resources:
+          requests:
+            cpu: "2"
+            memory: 6Gi
+          limits:
+            cpu: "4"
+            memory: 8Gi

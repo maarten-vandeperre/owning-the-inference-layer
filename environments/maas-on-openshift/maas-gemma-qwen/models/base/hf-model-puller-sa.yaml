@@ -1,0 +1,11 @@
+# ServiceAccount used by the Gemma deployment. The KServe controller discovers the
+# referenced "hf-token" Secret (key HF_TOKEN) and injects it into the storage-initializer,
+# which is needed because google/gemma-* repos are gated on Hugging Face.
+# The Secret itself is created by deploy.sh from the HF_TOKEN env var, never stored in git.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: hf-model-puller
+  namespace: maas-models
+secrets:
+  - name: hf-token

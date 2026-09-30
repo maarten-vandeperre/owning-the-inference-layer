@@ -1,0 +1,22 @@
+# Authorino gRPC/HTTP service with a service-ca issued serving cert.
+# Full spec (not a partial) so it can be created before the operator creates it.
+apiVersion: v1
+kind: Service
+metadata:
+  name: authorino-authorino-authorization
+  namespace: kuadrant-system
+  annotations:
+    service.beta.openshift.io/serving-cert-secret-name: authorino-server-cert
+spec:
+  type: ClusterIP
+  selector:
+    authorino-resource: authorino
+  ports:
+    - name: grpc
+      port: 50051
+      protocol: TCP
+      targetPort: 50051
+    - name: http
+      port: 5001
+      protocol: TCP
+      targetPort: 5001

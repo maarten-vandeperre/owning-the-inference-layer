@@ -1,0 +1,11 @@
+# Who may call which model (MaaSAuthPolicy) and with which token quota (MaaSSubscription).
+# A MaaSModelRef only turns Ready when BOTH reference it.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+commonAnnotations:
+  argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+resources:
+  - premium-group.yaml
+  - auth-policy.yaml
+  - subscription-free.yaml
+  - subscription-premium.yaml

@@ -1,0 +1,11 @@
+# RHOAI 3.4: MaaS lives under the kserve component
+apiVersion: datasciencecluster.opendatahub.io/v2
+kind: DataScienceCluster
+metadata:
+  name: default-dsc
+spec:
+  components:
+    kserve:
+      managementState: Managed
+      modelsAsService:
+        managementState: Managed

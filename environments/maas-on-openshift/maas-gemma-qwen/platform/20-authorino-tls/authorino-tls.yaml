@@ -1,0 +1,18 @@
+# Authorino with its TLS listener enabled (cert issued by the service-ca operator).
+# Full spec so it works whether or not Kuadrant already created the instance.
+apiVersion: operator.authorino.kuadrant.io/v1beta1
+kind: Authorino
+metadata:
+  name: authorino
+  namespace: kuadrant-system
+spec:
+  clusterWide: true
+  replicas: 1
+  listener:
+    tls:
+      enabled: true
+      certSecretRef:
+        name: authorino-server-cert
+  oidcServer:
+    tls:
+      enabled: false
