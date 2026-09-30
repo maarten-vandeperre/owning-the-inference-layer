@@ -1,0 +1,12 @@
+# Partial DSCInitialization applied with server-side apply: only spec.monitoring is owned.
+# This triggers the RHOAI observability cascade (MonitoringStack, ThanosQuerier, Perses,
+# tracing) that backs the MaaS token consumption dashboard.
+# maas-vllm-podmonitor feeds Gen AI studio Dashboard (TTFT / E2E / KV) via the OTel collector.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+commonAnnotations:
+  argocd.argoproj.io/sync-wave: "0"
+  argocd.argoproj.io/sync-options: ServerSideApply=true,Prune=false,Delete=false
+resources:
+  - dsci-monitoring.yaml
+  - maas-vllm-podmonitor.yaml

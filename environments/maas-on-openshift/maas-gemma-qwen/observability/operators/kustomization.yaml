@@ -1,0 +1,12 @@
+# Operators the RHOAI monitoring stack needs before DSCI monitoring can be switched on:
+#   Cluster Observability Operator -> Perses dashboards (RHOAI "Observe & monitor" tab)
+#   Tempo + OpenTelemetry          -> required by the RHOAI Monitoring controller
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+commonAnnotations:
+  argocd.argoproj.io/sync-wave: "-20"
+  argocd.argoproj.io/sync-options: Delete=false
+resources:
+  - cluster-observability.yaml
+  - tempo.yaml
+  - opentelemetry.yaml

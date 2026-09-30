@@ -32,20 +32,36 @@ spec:
         args:
           - "--served-model-name={{.Name}}"
           - --model=/mnt/models
-          - --max-model-len=4096
+          # 8192 so Gen AI playground (VLLM_MAX_TOKENS=4096) leaves room for the prompt;
+          # with max-model-len=4096, Llama Stack's default max_tokens=4096 is rejected.
+          - --max-model-len=8192
           - --enable-ssl-refresh
           - --ssl-certfile=/var/run/kserve/tls/tls.crt
           - --ssl-keyfile=/var/run/kserve/tls/tls.key
           - --enable-force-include-usage
+          # Playground always attaches file_search (and may attach MCP tools) with
+          # tool_choice=auto. Without these flags vLLM returns 400 and Llama Stack
+          # surfaces an empty failed assistant turn. Gemma is too small for reliable
+          # tool use; pythonic matches the Gemma-3 tool chat template below.
+          - --enable-auto-tool-choice
+          - --tool-call-parser=pythonic
+          # Stock Gemma chat template requires strict user/assistant alternation and
+          # rejects the playground's leading assistant welcome turn plus tools.
+          # Mounted ConfigMap: gemma-3-270m-it-chat-template (permissive Gemma-3).
+          - --chat-template=/etc/vllm/chat-template-playground.jinja
         env:
           - name: HF_HOME
             value: /tmp/hf_home
           - name: VLLM_CPU_KVCACHE_SPACE
-            value: "2"
+            value: "4"
         ports:
           - containerPort: 8000
             name: http
             protocol: TCP
+        volumeMounts:
+          - name: gemma-chat-template
+            mountPath: /etc/vllm
+            readOnly: true
         livenessProbe:
           httpGet: {path: /health, port: 8000, scheme: HTTPS}
           initialDelaySeconds: 300
@@ -61,7 +77,11 @@ spec:
         resources:
           requests:
             cpu: "2"
-            memory: 6Gi
+            memory: 8Gi
           limits:
             cpu: "4"
-            memory: 8Gi
+            memory: 10Gi
+    volumes:
+      - name: gemma-chat-template
+        configMap:
+          name: gemma-3-270m-it-chat-template

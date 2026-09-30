@@ -5,5 +5,6 @@ metadata:
   namespace: redhat-ods-applications
 spec:
   dashboardConfig:
-    modelAsService: true
-    genAiStudio: true
+    modelAsService: true          # MaaS pages in the dashboard
+    genAiStudio: true             # Gen AI studio: AI asset endpoints, API keys, playground
+    observabilityDashboard: true  # MaaS token consumption + usage dashboards

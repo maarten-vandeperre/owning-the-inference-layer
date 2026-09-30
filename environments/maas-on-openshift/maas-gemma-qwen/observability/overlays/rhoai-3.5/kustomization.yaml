@@ -1,0 +1,8 @@
+# RHOAI 3.5+: metrics dashboard + logs based per-request usage dashboards
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../operators
+  - ../../operators-loki
+  - ../../monitoring
+  - ../../usage-logs

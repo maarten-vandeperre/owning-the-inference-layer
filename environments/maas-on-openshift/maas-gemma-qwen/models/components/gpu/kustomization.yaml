@@ -32,14 +32,14 @@ patches:
             operator: Exists
             effect: NoSchedule
       - op: add
-        path: /spec/template/containers/0/volumeMounts
+        path: /spec/template/containers/0/volumeMounts/-
         value:
-          - name: shm
-            mountPath: /dev/shm
+          name: shm
+          mountPath: /dev/shm
       - op: add
-        path: /spec/template/volumes
+        path: /spec/template/volumes/-
         value:
-          - name: shm
-            emptyDir:
-              medium: Memory
-              sizeLimit: 2Gi
+          name: shm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 2Gi

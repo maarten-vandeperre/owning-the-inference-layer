@@ -9,3 +9,6 @@ spec:
       managementState: Managed
       modelsAsService:
         managementState: Managed
+    # Llama Stack operator: backs the Gen AI studio playground in 3.4
+    llamastackoperator:
+      managementState: Managed

@@ -1,0 +1,33 @@
+# RHOAI 3.5+: per-request usage logs (tokens, model, subscription, user) shipped from the
+# gateway to Loki, shown as admin + user dashboards under "Observe & monitor".
+# MinIO is a PoC S3 backend; point minio-secret at real S3/ODF for production.
+# The "minio-secret" Secret is created by deploy.sh, never stored in git.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: redhat-ods-monitoring
+commonAnnotations:
+  argocd.argoproj.io/sync-wave: "5"
+  argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+resources:
+  - minio.yaml
+  - lokistack.yaml
+
+configMapGenerator:
+  - name: maas-observability-params
+    envs:
+      - cluster-params.env
+    options:
+      disableNameSuffixHash: true
+      annotations:
+        config.kubernetes.io/local-config: "true"
+
+replacements:
+  - source:
+      kind: ConfigMap
+      name: maas-observability-params
+      fieldPath: data.STORAGE_CLASS
+    targets:
+      - select:
+          kind: LokiStack
+        fieldPaths:
+          - spec.storageClassName

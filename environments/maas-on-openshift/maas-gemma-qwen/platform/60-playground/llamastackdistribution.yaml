@@ -1,0 +1,74 @@
+# Gen AI studio playground (Llama Stack server) for RHOAI 3.4.
+#
+# Lives in ai-tenants (not maas-models): that namespace is created by the MaaS
+# controller, and the dashboard Playground UI is project-scoped — the working
+# UI-created playground is already here. Models are reached via the MaaS
+# gateway URLs below, so the LSD does not need to share the models namespace.
+#
+# VLLM_BASE_URL_* are filled by kustomize from cluster-params.env
+# (written by ./deploy.sh configure). API tokens come from Secret
+# lsd-maas-api-keys (created by ./deploy.sh, never committed): MaaS AuthPolicy
+# requires Bearer sk-oai-*, so literal "fake" yields empty playground chats.
+apiVersion: llamastack.io/v1alpha1
+kind: LlamaStackDistribution
+metadata:
+  name: lsd-genai-playground
+  namespace: ai-tenants
+  labels:
+    opendatahub.io/dashboard: "true"
+  annotations:
+    openshift.io/display-name: lsd-genai-playground
+spec:
+  replicas: 1
+  network:
+    allowedFrom:
+      namespaces:
+        - ai-tenants
+    exposeRoute: false
+  server:
+    distribution:
+      name: rh-dev
+    userConfig:
+      configMapName: llama-stack-config
+    containerSpec:
+      name: llama-stack
+      port: 8321
+      command:
+        - /bin/sh
+        - -c
+        - llama stack run /etc/llama-stack/config.yaml
+      resources:
+        requests:
+          cpu: 250m
+          memory: 500Mi
+        limits:
+          cpu: "2"
+          memory: 12Gi
+      env:
+        - name: VLLM_TLS_VERIFY
+          value: "false"
+        - name: MILVUS_DB_PATH
+          value: ~/.llama/milvus.db
+        - name: FMS_ORCHESTRATOR_URL
+          value: http://localhost
+        # Must stay below model --max-model-len (see models/*/llminferenceservice.yaml).
+        # Llama Stack sends this as max_tokens on every /v1/chat/completions call.
+        - name: VLLM_MAX_TOKENS
+          value: "4096"
+        - name: VLLM_API_TOKEN_1
+          valueFrom:
+            secretKeyRef:
+              name: lsd-maas-api-keys
+              key: VLLM_API_TOKEN_1
+        - name: VLLM_API_TOKEN_2
+          valueFrom:
+            secretKeyRef:
+              name: lsd-maas-api-keys
+              key: VLLM_API_TOKEN_2
+        - name: LLAMA_STACK_CONFIG_DIR
+          value: /opt/app-root/src/.llama/distributions/rh/
+        # Replaced entirely from cluster-params.env (PLAYGROUND_VLLM_URL_*)
+        - name: VLLM_BASE_URL_1
+          value: https://maas.apps.CHANGE-ME.example.com/maas-models/gemma-3-270m-it/v1
+        - name: VLLM_BASE_URL_2
+          value: https://maas.apps.CHANGE-ME.example.com/maas-models/qwen3-0-6b/v1

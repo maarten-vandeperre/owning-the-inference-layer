@@ -12,3 +12,7 @@ spec:
       managementState: Managed
       modelsAsAService:
         managementState: Managed
+    # OGX (the Gen AI playground backend) is deliberately NOT set here: on several RHOAI
+    # 3.5.x installs its module CRD is missing, and "ogx: Managed" then keeps the whole
+    # DSC at Ready=False. Enable it with "./deploy.sh playground", which rolls it back
+    # automatically when it hits that issue.

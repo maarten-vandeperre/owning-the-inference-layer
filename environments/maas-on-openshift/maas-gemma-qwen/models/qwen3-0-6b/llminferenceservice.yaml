@@ -30,21 +30,27 @@ spec:
         args:
           - "--served-model-name={{.Name}}"
           - --model=/mnt/models
-          - --max-model-len=4096
+          # 8192 so Gen AI playground (VLLM_MAX_TOKENS=4096) leaves room for the prompt;
+          # with max-model-len=4096, Llama Stack's default max_tokens=4096 is rejected.
+          - --max-model-len=8192
           - --enable-ssl-refresh
           - --ssl-certfile=/var/run/kserve/tls/tls.crt
           - --ssl-keyfile=/var/run/kserve/tls/tls.key
           # usage stats in streaming responses, needed for MaaS token accounting
           - --enable-force-include-usage
+          # tool calling, so the Gen AI playground can use MCP servers with Qwen
+          - --enable-auto-tool-choice
+          - --tool-call-parser=hermes
         env:
           - name: HF_HOME
             value: /tmp/hf_home
           - name: VLLM_CPU_KVCACHE_SPACE   # GiB of RAM for the KV cache (CPU only)
-            value: "4"
+            value: "6"
         ports:
           - containerPort: 8000
             name: http
             protocol: TCP
+        volumeMounts: []
         livenessProbe:
           httpGet: {path: /health, port: 8000, scheme: HTTPS}
           initialDelaySeconds: 300
@@ -64,3 +70,4 @@ spec:
           limits:
             cpu: "8"
             memory: 16Gi
+    volumes: []

@@ -6,6 +6,8 @@ metadata:
 spec:
   dashboardConfig:
     modelAsService: true          # MaaS pages in the dashboard
-    maasAuthPolicies: true        # MaaS admin pages (auth policies)
     vLLMDeploymentOnMaaS: true    # vLLM runtime on MaaS (Tech Preview in 3.4)
-    genAiStudio: true             # user facing AI asset endpoints / API keys
+    genAiStudio: true             # Gen AI studio: AI asset endpoints, API keys, playground
+    observabilityDashboard: true  # MaaS token consumption dashboard (Tech Preview)
+    # maasAuthPolicies is deprecated on 3.4.4: the CRD rejects setting it
+    # (it may only be removed or left unchanged). MaaS admin pages follow modelAsService.

@@ -1,0 +1,70 @@
+# Gen AI studio Dashboard (Perses llm-d performance) reads kserve_vllm:* via the
+# RHOAI data-science OTel collector → MonitoringStack path. That collector's
+# target allocator only discovers PodMonitors labeled opendatahub.io/monitoring=true.
+# KServe's built-in monitors use monitoring.opendatahub.io/scrape=true (UWM only),
+# so without this object the dashboard sees empty series and plots latency as 0
+# (queries use `or vector(0)`) / KV cache as "No data".
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: maas-vllm-engine
+  namespace: maas-models
+  labels:
+    app.kubernetes.io/component: llm-monitoring
+    app.kubernetes.io/part-of: maas-gemma-qwen
+    opendatahub.io/monitoring: "true"
+spec:
+  namespaceSelector:
+    matchNames:
+      - maas-models
+  selector:
+    matchLabels:
+      app.kubernetes.io/part-of: llminferenceservice
+    matchExpressions:
+      - key: app.kubernetes.io/component
+        operator: In
+        values:
+          - llminferenceservice-workload
+          - llminferenceservice-workload-prefill
+          - llminferenceservice-workload-worker
+          - llminferenceservice-workload-leader
+          - llminferenceservice-workload-leader-prefill
+          - llminferenceservice-workload-worker-prefill
+  podMetricsEndpoints:
+    - port: http
+      scheme: https
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 10s
+      tlsConfig:
+        insecureSkipVerify: true
+      relabelings:
+        - action: replace
+          sourceLabels:
+            - __meta_kubernetes_pod_label_app_kubernetes_io_name
+          targetLabel: llm_isvc_name
+        - action: replace
+          sourceLabels:
+            - __meta_kubernetes_pod_label_llm_d_ai_role
+          targetLabel: llm_isvc_role
+        - action: replace
+          regex: llminferenceservice-(.*)
+          replacement: $1
+          sourceLabels:
+            - __meta_kubernetes_pod_label_app_kubernetes_io_component
+          targetLabel: llm_isvc_component
+      metricRelabelings:
+        # Dashboard PromQL expects the kserve_ prefix (same as KServe's engine monitor).
+        - action: replace
+          replacement: kserve_$1
+          sourceLabels:
+            - __name__
+          targetLabel: __name__
+        # Inter-token panel queries time_per_output_token_seconds; current vLLM CPU
+        # images expose inter_token_latency_seconds instead.
+        - action: replace
+          regex: kserve_vllm:inter_token_latency_seconds(_.*)
+          replacement: kserve_vllm:time_per_output_token_seconds$1
+          sourceLabels:
+            - __name__
+          targetLabel: __name__

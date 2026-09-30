@@ -8,3 +8,5 @@ resources:
   - ../../30-gateway
   - ../../40-postgres
   - ../../50-rhoai/rhoai-3.4
+  # Llama Stack playground (3.4 only; needs llamastack.io CRDs from the DSC)
+  - ../../60-playground

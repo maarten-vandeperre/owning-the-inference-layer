@@ -1,0 +1,6 @@
+# RHOAI 3.4: metrics based MaaS observability dashboard (Tech Preview)
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../operators
+  - ../../monitoring

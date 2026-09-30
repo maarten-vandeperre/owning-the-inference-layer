@@ -4,3 +4,11 @@ namespace: maas-models
 resources:
   - llminferenceservice.yaml
   - maasmodelref.yaml
+configMapGenerator:
+  - name: gemma-3-270m-it-chat-template
+    files:
+      - chat-template-playground.jinja
+    options:
+      disableNameSuffixHash: true
+      labels:
+        opendatahub.io/dashboard: "true"

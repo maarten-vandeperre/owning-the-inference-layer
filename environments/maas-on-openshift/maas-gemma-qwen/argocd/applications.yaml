@@ -42,7 +42,12 @@ spec:
     - group: opendatahub.io
       kind: OdhDashboardConfig
       jqPathExpressions:
-        - .spec.dashboardConfig | del(.modelAsService, .genAiStudio, .maasAuthPolicies, .vLLMDeploymentOnMaaS)
+        - .spec.dashboardConfig | del(.modelAsService, .genAiStudio, .vLLMDeploymentOnMaaS, .observabilityDashboard)
+    # Llama Stack operator adopts the user ConfigMap (ownerReference) after apply
+    - kind: ConfigMap
+      name: llama-stack-config
+      jsonPointers:
+        - /metadata/ownerReferences
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application

@@ -1,5 +1,6 @@
 # Partial DataScienceCluster / OdhDashboardConfig objects, applied with server-side apply.
-# Only the MaaS related fields are owned here; everything else in your DSC is untouched.
+# Only the MaaS, Gen AI studio/playground and observability fields are owned here;
+# everything else in your DSC is untouched.
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 commonAnnotations:

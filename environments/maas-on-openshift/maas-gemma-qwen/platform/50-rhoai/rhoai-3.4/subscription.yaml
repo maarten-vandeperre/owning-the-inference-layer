@@ -1,0 +1,21 @@
+# Pin the Red Hat OpenShift AI operator to the 3.4 stream.
+# stable-3.x currently installs 3.5, whose Gen AI playground depends on the OGX
+# module. That module CRD is missing on several 3.5.x builds, so "ogx: Managed"
+# leaves OGXReady=False ("no matches for kind OGX") and can hold the DSC NotReady.
+# 3.4 has no ogx component. The playground is llamastackoperator instead.
+#
+# OLM will not downgrade an already-installed 3.5 CSV when this channel changes.
+# Replace the operator by deleting the Subscription and the 3.5 ClusterServiceVersion,
+# then apply this object (startingCSV is only honored on a new Subscription).
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: rhods-operator
+  namespace: redhat-ods-operator
+spec:
+  channel: stable-3.4
+  installPlanApproval: Automatic
+  name: rhods-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  startingCSV: rhods-operator.3.4.4

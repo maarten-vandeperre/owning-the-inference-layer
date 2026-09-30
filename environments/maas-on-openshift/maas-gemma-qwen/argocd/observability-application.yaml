@@ -1,0 +1,32 @@
+# Token consumption / telemetry dashboards. Created by "./deploy.sh argocd" unless --no-observability.
+# Enabling gateway telemetry and usage logging on the operator owned MaaS tenant config
+# is done by deploy.sh (post-sync glue), not by this Application.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: maas-observability
+  namespace: openshift-gitops
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  project: default
+  source:
+    repoURL: __REPO_URL__
+    targetRevision: __REVISION__
+    path: __REPO_PATH__observability/overlays/rhoai-__RHOAI_VERSION__
+  destination:
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - SkipDryRunOnMissingResource=true
+    retry:
+      limit: 20
+      backoff:
+        duration: 30s
+        factor: 2
+        maxDuration: 5m

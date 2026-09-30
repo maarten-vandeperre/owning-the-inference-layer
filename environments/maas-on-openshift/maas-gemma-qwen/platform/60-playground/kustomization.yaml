@@ -1,0 +1,45 @@
+# Gen AI playground (LlamaStackDistribution) for RHOAI 3.4 / llamastackoperator.
+# Wired into platform/overlays/rhoai-3.4 and applied by ./deploy.sh oc after the
+# Llama Stack CRDs exist. Namespace ai-tenants is owned by the MaaS controller;
+# we do not declare it here.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - llamastackdistribution.yaml
+  - llama-stack-config.yaml
+
+commonAnnotations:
+  argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+
+# Same keys as platform/30-gateway/cluster-params.env (written by ./deploy.sh configure).
+# Kept local: kustomize refuses env files outside this directory.
+configMapGenerator:
+  - name: maas-cluster-params
+    envs:
+      - cluster-params.env
+    options:
+      disableNameSuffixHash: true
+      annotations:
+        config.kubernetes.io/local-config: "true"
+
+replacements:
+  - source:
+      kind: ConfigMap
+      name: maas-cluster-params
+      fieldPath: data.PLAYGROUND_VLLM_URL_GEMMA
+    targets:
+      - select:
+          kind: LlamaStackDistribution
+          name: lsd-genai-playground
+        fieldPaths:
+          - spec.server.containerSpec.env.[name=VLLM_BASE_URL_1].value
+  - source:
+      kind: ConfigMap
+      name: maas-cluster-params
+      fieldPath: data.PLAYGROUND_VLLM_URL_QWEN
+    targets:
+      - select:
+          kind: LlamaStackDistribution
+          name: lsd-genai-playground
+        fieldPaths:
+          - spec.server.containerSpec.env.[name=VLLM_BASE_URL_2].value
