@@ -101,6 +101,10 @@ public class CoffeeResource {
             String content=coffeeAssistant.interpret(input.text());
             if(content==null || content.isBlank())
                 throw problem(502,"The model did not complete the order. Try a simpler request.");
+            // Reasoning models (e.g. Qwen3) prepend a <think>...</think> block before the answer.
+            content=content.replaceAll("(?is)<think>.*?</think>","").trim();
+            if(content.isBlank())
+                throw problem(502,"The model did not complete the order. Try a simpler request.");
             if(content.startsWith("```")) content=content.replaceFirst("^```(?:json)?\\s*", "").replaceFirst("\\s*```$", "");
             JsonNode result=json.readTree(content);
             if(result==null || !result.isObject() || !result.path("clarification").isTextual()) throw problem(502,"The model returned an invalid order. Please try again.");
