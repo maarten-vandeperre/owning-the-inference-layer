@@ -17,7 +17,12 @@ public class CoffeeOpenAiConfigInterceptor implements ConfigSourceInterceptor {
         // Prefer coffee.chat-url so AI_CHAT_URL keeps working; the OpenAI extension default
         // (api.openai.com) must not win when a demo endpoint is configured.
         if ("quarkus.langchain4j.openai.base-url".equals(name)) {
-            ConfigValue chatUrl = context.proceed("coffee.chat-url");
+            // Use restart(), not proceed(): proceed() only continues the interceptor chain from
+            // THIS interceptor's position onward, so looking up a *different* property name here
+            // would skip earlier interceptors (notably expression expansion, at the same
+            // priority tier) and return the raw, unexpanded "${AI_CHAT_URL:...}" placeholder
+            // instead of its resolved value. restart() re-runs the full chain for the new name.
+            ConfigValue chatUrl = context.restart("coffee.chat-url");
             if (chatUrl != null && chatUrl.getValue() != null && !chatUrl.getValue().isBlank()) {
                 return chatUrl.withValue(toOpenAiBaseUrl(chatUrl.getValue()));
             }
@@ -28,7 +33,9 @@ public class CoffeeOpenAiConfigInterceptor implements ConfigSourceInterceptor {
             if (explicit != null && explicit.getValue() != null && !explicit.getValue().isBlank()) {
                 return explicit;
             }
-            ConfigValue jsonMode = context.proceed("coffee.json-mode");
+            // Same reasoning as above: coffee.json-mode must go through the full chain so its
+            // ${AI_JSON_MODE:...} expression is expanded before Boolean.parseBoolean sees it.
+            ConfigValue jsonMode = context.restart("coffee.json-mode");
             if (jsonMode != null && Boolean.parseBoolean(jsonMode.getValue())) {
                 return ConfigValue.builder()
                     .withName(name)
